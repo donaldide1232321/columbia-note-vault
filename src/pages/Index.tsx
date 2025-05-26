@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +19,7 @@ const Index = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [userCount, setUserCount] = useState(247); // Starting with a base count
+  const [userCount, setUserCount] = useState(24); // Changed from 247 to 24
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
