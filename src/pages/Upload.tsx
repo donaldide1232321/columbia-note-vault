@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Upload } from 'lucide-react';
+import { Upload as UploadIcon } from 'lucide-react';
 
 const Upload = () => {
   const { user, updateUserUploadStatus } = useAuth();
