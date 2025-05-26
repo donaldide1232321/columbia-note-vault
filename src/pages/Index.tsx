@@ -54,7 +54,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-columbia-blue rounded-lg flex items-center justify-center text-xl">
+                <div className="w-10 h-10 bg-columbia-blue rounded-lg flex items-center justify-center text-xl text-white">
                   ✏️
                 </div>
                 <h1 className="ml-3 text-xl font-bold text-gray-900">NotesHub @Columbia</h1>
@@ -143,7 +143,7 @@ const Index = () => {
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-columbia-blue rounded-2xl flex items-center justify-center text-3xl">
+          <div className="w-16 h-16 bg-columbia-blue rounded-2xl flex items-center justify-center text-3xl text-white">
             ✏️
           </div>
         </div>
