@@ -172,7 +172,7 @@ const Index = () => {
         {/* Dynamic User Count */}
         <div className="mt-4 text-center">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-columbia-blue-light border border-columbia-blue">
-            <span className="text-sm font-medium text-neutral-50">
+            <span className="text-sm font-medium text-gray-900">
               🎓 {userCount.toLocaleString()} students already joined
             </span>
           </div>
