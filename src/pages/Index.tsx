@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-
 const Index = () => {
   const {
     isAuthenticated,
@@ -39,10 +37,8 @@ const Index = () => {
         return prev + increment;
       });
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -60,7 +56,6 @@ const Index = () => {
       });
     }
   };
-
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupForm.username.length < 3) {
@@ -86,7 +81,6 @@ const Index = () => {
       });
     }
   };
-
   if (isAuthenticated) {
     return <div className="min-h-screen bg-white">
         <header className="border-b border-gray-200 bg-white">
@@ -163,7 +157,6 @@ const Index = () => {
         </main>
       </div>;
   }
-
   return <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
@@ -179,7 +172,7 @@ const Index = () => {
         {/* Dynamic User Count */}
         <div className="mt-4 text-center">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-columbia-blue-light border border-columbia-blue">
-            <span className="text-sm font-medium text-columbia-blue">
+            <span className="text-sm font-medium text-neutral-50">
               🎓 {userCount.toLocaleString()} students already joined
             </span>
           </div>
@@ -256,5 +249,4 @@ const Index = () => {
       </div>
     </div>;
 };
-
 export default Index;
