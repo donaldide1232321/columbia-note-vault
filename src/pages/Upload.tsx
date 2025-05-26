@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Upload as UploadIcon } from 'lucide-react';
 
 const Upload = () => {
   const { user, updateUserUploadStatus } = useAuth();
@@ -21,28 +20,6 @@ const Upload = () => {
     file: null as File | null
   });
   const [isUploading, setIsUploading] = useState(false);
-
-  // Sample Columbia courses for autocomplete
-  const columbiaCourses = [
-    'COMS 1004 - Introduction to Computer Science',
-    'COMS 3134 - Data Structures',
-    'COMS 3157 - Advanced Programming',
-    'COMS 4111 - Database Systems',
-    'COMS 4118 - Operating Systems',
-    'ECON 1105 - Principles of Economics',
-    'ECON 3211 - Intermediate Microeconomics',
-    'MATH 1101 - Calculus I',
-    'MATH 1102 - Calculus II',
-    'MATH 2010 - Linear Algebra',
-    'PHYS 1201 - General Physics I',
-    'PHYS 1202 - General Physics II',
-    'CHEM 1403 - General Chemistry',
-    'BIOL 1001 - Biology Today',
-    'ENGL 1010 - University Writing',
-    'HIST 1101 - World History',
-    'PSYC 1001 - Science of Psychology',
-    'STAT 1201 - Calculus-Based Statistics'
-  ];
 
   const fileTypes = [
     'Notes',
@@ -140,19 +117,13 @@ const Upload = () => {
                 <Label htmlFor="course" className="text-base font-semibold">Course</Label>
                 <Input
                   id="course"
-                  list="courses"
-                  placeholder="Search and select a course..."
+                  placeholder="e.g., MATH 1102, ECON 1105, COMS 3157"
                   value={formData.course}
                   onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                   className="mt-1"
                   required
                 />
-                <datalist id="courses">
-                  {columbiaCourses.map((course, index) => (
-                    <option key={index} value={course} />
-                  ))}
-                </datalist>
-                <p className="text-sm text-gray-500 mt-1">Start typing to see course suggestions</p>
+                <p className="text-sm text-gray-500 mt-1">Enter the course code and name</p>
               </div>
 
               <div>

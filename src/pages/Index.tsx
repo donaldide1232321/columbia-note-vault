@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+
 const Index = () => {
   const {
     isAuthenticated,
@@ -17,6 +18,7 @@ const Index = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [userCount, setUserCount] = useState(247); // Starting with a base count
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -26,6 +28,20 @@ const Index = () => {
     password: '',
     username: ''
   });
+
+  // Simulate dynamic user count
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUserCount(prev => {
+        // Randomly add 0-2 users every 30 seconds
+        const increment = Math.floor(Math.random() * 3);
+        return prev + increment;
+      });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -43,6 +59,7 @@ const Index = () => {
       });
     }
   };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupForm.username.length < 3) {
@@ -68,6 +85,7 @@ const Index = () => {
       });
     }
   };
+
   if (isAuthenticated) {
     return <div className="min-h-screen bg-white">
         <header className="border-b border-gray-200 bg-white">
@@ -144,6 +162,7 @@ const Index = () => {
         </main>
       </div>;
   }
+
   return <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
@@ -155,6 +174,15 @@ const Index = () => {
           NotesHub @Columbia
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">Columbia's 1st anonymous note-sharing platform. Share and discover academic materials anonymously</p>
+        
+        {/* Dynamic User Count */}
+        <div className="mt-4 text-center">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-columbia-blue-light border border-columbia-blue">
+            <span className="text-sm font-medium text-columbia-blue">
+              🎓 {userCount.toLocaleString()} students already joined
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -227,4 +255,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
