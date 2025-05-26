@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { search, upload, user } from 'lucide-react';
+import { Search, Upload, User } from 'lucide-react';
 
 interface Upload {
   id: string;
@@ -167,7 +166,7 @@ const Browse = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
-                <search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               </div>
             </div>
           </div>
@@ -245,7 +244,7 @@ const Browse = () => {
                         <p className="text-sm text-gray-500">📄 {item.fileName}</p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-1 text-sm text-gray-500">
-                            <user className="h-4 w-4" />
+                            <User className="h-4 w-4" />
                             <span>{item.username}</span>
                           </div>
                           <p className="text-xs text-gray-400">
