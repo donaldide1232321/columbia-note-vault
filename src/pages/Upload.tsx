@@ -26,9 +26,7 @@ const Upload = () => {
     'Syllabus', 
     'Past Exams',
     'Exam Solutions',
-    'Homework',
-    'Cheat Sheet',
-    'Study Guide'
+    'Homework'
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

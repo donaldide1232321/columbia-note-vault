@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Search, User, Download, FileText, FileImage } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 
 interface Upload {
   id: string;
@@ -111,46 +112,9 @@ const Browse = () => {
       'Syllabus': 'bg-green-100 text-green-800',
       'Past Exams': 'bg-red-100 text-red-800',
       'Exam Solutions': 'bg-purple-100 text-purple-800',
-      'Homework': 'bg-orange-100 text-orange-800',
-      'Cheat Sheet': 'bg-yellow-100 text-yellow-800',
-      'Study Guide': 'bg-indigo-100 text-indigo-800'
+      'Homework': 'bg-orange-100 text-orange-800'
     };
     return colors[fileType as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    
-    if (imageExtensions.includes(extension || '')) {
-      return <FileImage className="h-5 w-5" />;
-    }
-    return <FileText className="h-5 w-5" />;
-  };
-
-  const generatePreviewUrl = (fileName: string) => {
-    // Generate a placeholder preview URL based on file type
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    
-    if (imageExtensions.includes(extension || '')) {
-      // For image files, use a document preview placeholder
-      return `https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop&crop=center`;
-    } else {
-      // For document files, use a document preview placeholder
-      return `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=300&fit=crop&crop=center`;
-    }
-  };
-
-  const handleDownload = (upload: Upload) => {
-    // Simulate file download
-    toast({
-      title: "Download started",
-      description: `Downloading ${upload.fileName}...`
-    });
-    
-    // In a real app, this would trigger an actual file download
-    console.log(`Downloading file: ${upload.fileName}`);
   };
 
   if (!user?.hasUploaded) {
@@ -221,24 +185,7 @@ const Browse = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredUploads.map(item => (
-                <Card key={item.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                  {/* Large Preview Thumbnail */}
-                  <div className="relative h-48 bg-gray-100 overflow-hidden">
-                    <img
-                      src={generatePreviewUrl(item.fileName)}
-                      alt={`Preview of ${item.label}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <div className="text-white text-center">
-                        <div className="mb-2">
-                          {getFileIcon(item.fileName)}
-                        </div>
-                        <p className="text-sm">Click to preview</p>
-                      </div>
-                    </div>
-                  </div>
-
+                <Card key={item.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -253,10 +200,7 @@ const Browse = () => {
                   <CardContent>
                     <div className="space-y-3">
                       <p className="font-medium text-gray-900">{item.label}</p>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        {getFileIcon(item.fileName)}
-                        <span>{item.fileName}</span>
-                      </div>
+                      <p className="text-sm text-gray-500">📄 {item.fileName}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                           <User className="h-4 w-4" />
@@ -291,12 +235,7 @@ const Browse = () => {
                             <span className="text-sm">{item.downvotes}</span>
                           </button>
                         </div>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleDownload(item)}
-                          className="bg-columbia-blue hover:bg-columbia-blue-dark"
-                        >
-                          <Download className="h-4 w-4 mr-1" />
+                        <Button size="sm" variant="outline">
                           Download
                         </Button>
                       </div>
