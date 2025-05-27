@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,8 +27,7 @@ const Upload = () => {
     'Past Exams',
     'Exam Solutions',
     'Homework',
-    'Cheat Sheet',
-    'Study Guide'
+    'Cheat Sheet'
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

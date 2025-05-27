@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,8 +46,7 @@ const EditUploadDialog: React.FC<EditUploadDialogProps> = ({ upload, currentUser
     'Past Exams',
     'Exam Solutions',
     'Homework',
-    'Cheat Sheet',
-    'Study Guide'
+    'Cheat Sheet'
   ];
 
   const handleUpdate = async (e: React.FormEvent) => {
