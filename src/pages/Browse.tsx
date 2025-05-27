@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Search, User, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import EditUploadDialog from '@/components/EditUploadDialog';
 
 interface Upload {
   id: string;
@@ -296,6 +296,18 @@ const Browse = () => {
                           {new Date(item.upload_date).toLocaleDateString()}
                         </p>
                       </div>
+                      
+                      {/* Edit/Delete options for user's own uploads */}
+                      {user && item.user_id === user.id && (
+                        <div className="pt-2 border-t">
+                          <EditUploadDialog 
+                            upload={item} 
+                            currentUserId={user.id} 
+                            onUpdate={fetchUploads} 
+                          />
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-between pt-2 border-t">
                         <div className="flex items-center space-x-4">
                           <button
