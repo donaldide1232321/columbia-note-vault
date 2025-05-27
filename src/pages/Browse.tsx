@@ -7,20 +7,27 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Search, User } from 'lucide-react';
+import { Search, User, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Upload {
   id: string;
-  userId: string;
+  user_id: string;
   username: string;
   course: string;
   professor: string;
-  fileType: string;
+  file_type: string;
   label: string;
-  fileName: string;
-  uploadDate: string;
+  file_name: string;
+  file_url: string;
+  upload_date: string;
   upvotes: number;
   downvotes: number;
+}
+
+interface Vote {
+  upload_id: string;
+  vote_type: 'up' | 'down';
 }
 
 const Browse = () => {
@@ -43,12 +50,45 @@ const Browse = () => {
       return;
     }
 
-    const savedUploads = JSON.parse(localStorage.getItem('noteshub_uploads') || '[]');
-    const savedVotes = JSON.parse(localStorage.getItem(`noteshub_votes_${user?.id}`) || '{}');
-    setUploads(savedUploads);
-    setFilteredUploads(savedUploads);
-    setUserVotes(savedVotes);
+    fetchUploads();
+    fetchUserVotes();
   }, [user, navigate]);
+
+  const fetchUploads = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('uploads')
+        .select('*')
+        .order('upload_date', { ascending: false });
+
+      if (error) throw error;
+      setUploads(data || []);
+      setFilteredUploads(data || []);
+    } catch (error) {
+      console.error('Error fetching uploads:', error);
+    }
+  };
+
+  const fetchUserVotes = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('votes')
+        .select('upload_id, vote_type')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      const votesMap: Record<string, 'up' | 'down'> = {};
+      data?.forEach((vote: Vote) => {
+        votesMap[vote.upload_id] = vote.vote_type;
+      });
+      setUserVotes(votesMap);
+    } catch (error) {
+      console.error('Error fetching user votes:', error);
+    }
+  };
 
   useEffect(() => {
     let filtered = uploads;
@@ -64,46 +104,90 @@ const Browse = () => {
     setFilteredUploads(filtered);
   }, [uploads, searchTerm]);
 
-  const handleVote = (uploadId: string, voteType: 'up' | 'down') => {
-    const currentVote = userVotes[uploadId];
-    let newVotes = { ...userVotes };
-    
-    // Update uploads array
-    const updatedUploads = uploads.map(upload => {
-      if (upload.id === uploadId) {
-        let newUpvotes = upload.upvotes;
-        let newDownvotes = upload.downvotes;
+  const handleVote = async (uploadId: string, voteType: 'up' | 'down') => {
+    if (!user) return;
 
-        // Remove previous vote if exists
-        if (currentVote === 'up') {
-          newUpvotes--;
-        } else if (currentVote === 'down') {
-          newDownvotes--;
-        }
+    try {
+      const currentVote = userVotes[uploadId];
+      
+      if (currentVote === voteType) {
+        // Remove vote
+        await supabase
+          .from('votes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('upload_id', uploadId);
+        
+        // Update vote counts
+        const field = voteType === 'up' ? 'upvotes' : 'downvotes';
+        await supabase
+          .from('uploads')
+          .update({ [field]: uploads.find(u => u.id === uploadId)?.[field]! - 1 })
+          .eq('id', uploadId);
 
-        // Add new vote if different from current
-        if (currentVote !== voteType) {
+        setUserVotes(prev => {
+          const newVotes = { ...prev };
+          delete newVotes[uploadId];
+          return newVotes;
+        });
+      } else {
+        // Add or update vote
+        await supabase
+          .from('votes')
+          .upsert({
+            user_id: user.id,
+            upload_id: uploadId,
+            vote_type: voteType
+          });
+
+        // Update vote counts
+        const upload = uploads.find(u => u.id === uploadId);
+        if (upload) {
+          let newUpvotes = upload.upvotes;
+          let newDownvotes = upload.downvotes;
+
+          // Remove previous vote if exists
+          if (currentVote === 'up') {
+            newUpvotes--;
+          } else if (currentVote === 'down') {
+            newDownvotes--;
+          }
+
+          // Add new vote
           if (voteType === 'up') {
             newUpvotes++;
-            newVotes[uploadId] = 'up';
           } else {
             newDownvotes++;
-            newVotes[uploadId] = 'down';
           }
-        } else {
-          // Remove vote if same as current
-          delete newVotes[uploadId];
+
+          await supabase
+            .from('uploads')
+            .update({ upvotes: newUpvotes, downvotes: newDownvotes })
+            .eq('id', uploadId);
         }
 
-        return { ...upload, upvotes: newUpvotes, downvotes: newDownvotes };
+        setUserVotes(prev => ({ ...prev, [uploadId]: voteType }));
       }
-      return upload;
-    });
 
-    setUploads(updatedUploads);
-    setUserVotes(newVotes);
-    localStorage.setItem('noteshub_uploads', JSON.stringify(updatedUploads));
-    localStorage.setItem(`noteshub_votes_${user?.id}`, JSON.stringify(newVotes));
+      // Refresh uploads
+      fetchUploads();
+    } catch (error) {
+      console.error('Error handling vote:', error);
+      toast({ title: "Error updating vote", variant: "destructive" });
+    }
+  };
+
+  const handleDownload = (upload: Upload) => {
+    // Create a mock download - in a real app, this would download the actual file
+    const element = document.createElement('a');
+    const file = new Blob([`Mock file content for: ${upload.file_name}`], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = upload.file_name;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({ title: "Download started", description: `Downloading ${upload.file_name}` });
   };
 
   const getFileTypeColor = (fileType: string) => {
@@ -112,7 +196,9 @@ const Browse = () => {
       'Syllabus': 'bg-green-100 text-green-800',
       'Past Exams': 'bg-red-100 text-red-800',
       'Exam Solutions': 'bg-purple-100 text-purple-800',
-      'Homework': 'bg-orange-100 text-orange-800'
+      'Homework': 'bg-orange-100 text-orange-800',
+      'Cheat Sheet': 'bg-yellow-100 text-yellow-800',
+      'Study Guide': 'bg-pink-100 text-pink-800'
     };
     return colors[fileType as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -192,22 +278,22 @@ const Browse = () => {
                         <CardTitle className="text-lg line-clamp-2">{item.course}</CardTitle>
                         <p className="text-sm text-gray-600 mt-1">Prof. {item.professor}</p>
                       </div>
-                      <Badge className={getFileTypeColor(item.fileType)}>
-                        {item.fileType}
+                      <Badge className={getFileTypeColor(item.file_type)}>
+                        {item.file_type}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <p className="font-medium text-gray-900">{item.label}</p>
-                      <p className="text-sm text-gray-500">📄 {item.fileName}</p>
+                      <p className="text-sm text-gray-500">📄 {item.file_name}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                           <User className="h-4 w-4" />
                           <span>{item.username}</span>
                         </div>
                         <p className="text-xs text-gray-400">
-                          {new Date(item.uploadDate).toLocaleDateString()}
+                          {new Date(item.upload_date).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
@@ -235,7 +321,13 @@ const Browse = () => {
                             <span className="text-sm">{item.downvotes}</span>
                           </button>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDownload(item)}
+                          className="flex items-center gap-1"
+                        >
+                          <Download className="h-4 w-4" />
                           Download
                         </Button>
                       </div>

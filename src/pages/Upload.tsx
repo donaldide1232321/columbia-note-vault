@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Upload = () => {
   const { user, updateUserUploadStatus } = useAuth();
@@ -26,7 +27,9 @@ const Upload = () => {
     'Syllabus', 
     'Past Exams',
     'Exam Solutions',
-    'Homework'
+    'Homework',
+    'Cheat Sheet',
+    'Study Guide'
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,31 +48,34 @@ const Upload = () => {
 
     setIsUploading(true);
     
-    // Simulate upload
-    setTimeout(() => {
-      const uploads = JSON.parse(localStorage.getItem('noteshub_uploads') || '[]');
-      const newUpload = {
-        id: Date.now().toString(),
-        userId: user?.id,
-        username: user?.username,
-        course: formData.course,
-        professor: formData.professor,
-        fileType: formData.fileType,
-        label: formData.label,
-        fileName: formData.file?.name,
-        uploadDate: new Date().toISOString(),
-        upvotes: 0,
-        downvotes: 0
-      };
-      
-      uploads.push(newUpload);
-      localStorage.setItem('noteshub_uploads', JSON.stringify(uploads));
-      
-      updateUserUploadStatus();
+    try {
+      // Store upload in database
+      const { error } = await supabase
+        .from('uploads')
+        .insert({
+          user_id: user?.id,
+          username: user?.username,
+          course: formData.course,
+          professor: formData.professor,
+          file_type: formData.fileType,
+          label: formData.label,
+          file_name: formData.file.name,
+          file_url: `mock://uploads/${Date.now()}-${formData.file.name}` // Mock URL for now
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      await updateUserUploadStatus();
       setIsUploading(false);
       toast({ title: "Upload successful!", description: "Your material has been shared with the community" });
       navigate('/');
-    }, 2000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setIsUploading(false);
+      toast({ title: "Upload failed", description: "Please try again", variant: "destructive" });
+    }
   };
 
   const handleBackToHome = () => {

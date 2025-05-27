@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Check for existing user session
     const savedUser = localStorage.getItem('noteshub_user');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
@@ -41,55 +43,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call - in real app, this would authenticate with backend
-    const savedUsers = JSON.parse(localStorage.getItem('noteshub_users') || '[]');
-    const existingUser = savedUsers.find((u: any) => u.email === email && u.password === password);
-    
-    if (existingUser) {
+    try {
+      // Simple password hashing for demo (in production, use proper bcrypt)
+      const passwordHash = btoa(password);
+      
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .eq('password_hash', passwordHash)
+        .single();
+
+      if (error || !users) {
+        return false;
+      }
+
       const userData = {
-        id: existingUser.id,
-        email: existingUser.email,
-        username: existingUser.username,
-        hasUploaded: existingUser.hasUploaded || false
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        hasUploaded: users.has_uploaded
       };
+
       setUser(userData);
       setIsAuthenticated(true);
       localStorage.setItem('noteshub_user', JSON.stringify(userData));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const signup = async (email: string, password: string, username: string): Promise<boolean> => {
-    // Simulate API call - in real app, this would create user in backend
-    const savedUsers = JSON.parse(localStorage.getItem('noteshub_users') || '[]');
-    const existingUser = savedUsers.find((u: any) => u.email === email || u.username === username);
-    
-    if (existingUser) {
-      return false; // User already exists
+    try {
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .or(`email.eq.${email},username.eq.${username}`)
+        .single();
+
+      if (existingUser) {
+        return false; // User already exists
+      }
+
+      // Simple password hashing for demo (in production, use proper bcrypt)
+      const passwordHash = btoa(password);
+
+      const { data: newUser, error } = await supabase
+        .from('users')
+        .insert({
+          email,
+          username,
+          password_hash: passwordHash,
+          has_uploaded: false
+        })
+        .select()
+        .single();
+
+      if (error || !newUser) {
+        return false;
+      }
+
+      const userData = {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        hasUploaded: false
+      };
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('noteshub_user', JSON.stringify(userData));
+      return true;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
     }
-
-    const newUser = {
-      id: Date.now().toString(),
-      email,
-      password,
-      username,
-      hasUploaded: false
-    };
-
-    savedUsers.push(newUser);
-    localStorage.setItem('noteshub_users', JSON.stringify(savedUsers));
-
-    const userData = {
-      id: newUser.id,
-      email: newUser.email,
-      username: newUser.username,
-      hasUploaded: false
-    };
-    setUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem('noteshub_user', JSON.stringify(userData));
-    return true;
   };
 
   const logout = () => {
@@ -98,18 +129,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('noteshub_user');
   };
 
-  const updateUserUploadStatus = () => {
+  const updateUserUploadStatus = async () => {
     if (user) {
-      const updatedUser = { ...user, hasUploaded: true };
-      setUser(updatedUser);
-      localStorage.setItem('noteshub_user', JSON.stringify(updatedUser));
-      
-      // Update in users array
-      const savedUsers = JSON.parse(localStorage.getItem('noteshub_users') || '[]');
-      const updatedUsers = savedUsers.map((u: any) => 
-        u.id === user.id ? { ...u, hasUploaded: true } : u
-      );
-      localStorage.setItem('noteshub_users', JSON.stringify(updatedUsers));
+      try {
+        await supabase
+          .from('users')
+          .update({ has_uploaded: true })
+          .eq('id', user.id);
+
+        const updatedUser = { ...user, hasUploaded: true };
+        setUser(updatedUser);
+        localStorage.setItem('noteshub_user', JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Error updating upload status:', error);
+      }
     }
   };
 

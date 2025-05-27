@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
 const Index = () => {
   const {
     isAuthenticated,
@@ -17,7 +20,7 @@ const Index = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [userCount, setUserCount] = useState(24); // Changed from 247 to 24
+  const [userCount, setUserCount] = useState(0);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -28,17 +31,42 @@ const Index = () => {
     username: ''
   });
 
-  // Simulate dynamic user count
+  // Fetch user count from database
   useEffect(() => {
-    const interval = setInterval(() => {
-      setUserCount(prev => {
-        // Randomly add 0-2 users every 30 seconds
-        const increment = Math.floor(Math.random() * 3);
-        return prev + increment;
-      });
-    }, 30000);
-    return () => clearInterval(interval);
+    const fetchUserCount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_stats')
+          .select('user_count')
+          .eq('id', 1)
+          .single();
+
+        if (error) throw error;
+        setUserCount(data?.user_count || 0);
+      } catch (error) {
+        console.error('Error fetching user count:', error);
+      }
+    };
+
+    fetchUserCount();
+
+    // Set up real-time subscription for user count updates
+    const channel = supabase
+      .channel('app_stats_changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'app_stats'
+      }, (payload) => {
+        setUserCount(payload.new.user_count);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,6 +84,7 @@ const Index = () => {
       });
     }
   };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupForm.username.length < 3) {
@@ -81,6 +110,7 @@ const Index = () => {
       });
     }
   };
+
   if (isAuthenticated) {
     return <div className="min-h-screen bg-white">
         <header className="border-b border-gray-200 bg-white">
@@ -157,6 +187,7 @@ const Index = () => {
         </main>
       </div>;
   }
+
   return <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
@@ -249,4 +280,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;

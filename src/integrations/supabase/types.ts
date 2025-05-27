@@ -9,7 +9,143 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      app_stats: {
+        Row: {
+          id: number
+          updated_at: string | null
+          user_count: number | null
+        }
+        Insert: {
+          id?: number
+          updated_at?: string | null
+          user_count?: number | null
+        }
+        Update: {
+          id?: number
+          updated_at?: string | null
+          user_count?: number | null
+        }
+        Relationships: []
+      }
+      uploads: {
+        Row: {
+          course: string
+          downvotes: number | null
+          file_name: string
+          file_type: string
+          file_url: string | null
+          id: string
+          label: string
+          professor: string
+          upload_date: string | null
+          upvotes: number | null
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          course: string
+          downvotes?: number | null
+          file_name: string
+          file_type: string
+          file_url?: string | null
+          id?: string
+          label: string
+          professor: string
+          upload_date?: string | null
+          upvotes?: number | null
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          course?: string
+          downvotes?: number | null
+          file_name?: string
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          label?: string
+          professor?: string
+          upload_date?: string | null
+          upvotes?: number | null
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uploads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          has_uploaded: boolean | null
+          id: string
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          has_uploaded?: boolean | null
+          id?: string
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          has_uploaded?: boolean | null
+          id?: string
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          upload_id: string | null
+          user_id: string | null
+          vote_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          upload_id?: string | null
+          user_id?: string | null
+          vote_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          upload_id?: string | null
+          user_id?: string | null
+          vote_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "uploads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
