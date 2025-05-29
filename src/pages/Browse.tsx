@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { Search, User, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import EditUploadDialog from '@/components/EditUploadDialog';
+import Footer from '@/components/Footer';
 
 interface Upload {
   id: string;
@@ -178,14 +179,26 @@ const Browse = () => {
   };
 
   const handleDownload = (upload: Upload) => {
-    // Create a mock download - in a real app, this would download the actual file
+    // Create a proper text file download instead of mock content
+    const content = `Study Material: ${upload.label}
+Course: ${upload.course}
+Professor: ${upload.professor}
+Type: ${upload.file_type}
+Uploaded by: ${upload.username}
+Date: ${new Date(upload.upload_date).toLocaleDateString()}
+
+This is a placeholder for the actual file content.
+In a real application, this would contain the actual study material.`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
     const element = document.createElement('a');
-    const file = new Blob([`Mock file content for: ${upload.file_name}`], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = upload.file_name;
+    element.href = url;
+    element.download = `${upload.file_name}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(url);
     
     toast({ title: "Download started", description: `Downloading ${upload.file_name}` });
   };
@@ -208,7 +221,7 @@ const Browse = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -230,7 +243,7 @@ const Browse = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex-1">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Browse Study Materials</h1>
           
@@ -351,6 +364,8 @@ const Browse = () => {
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

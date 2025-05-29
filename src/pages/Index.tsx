@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import Footer from '@/components/Footer';
 
 const Index = () => {
   const {
@@ -112,7 +112,7 @@ const Index = () => {
   };
 
   if (isAuthenticated) {
-    return <div className="min-h-screen bg-white">
+    return <div className="min-h-screen bg-white flex flex-col">
         <header className="border-b border-gray-200 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -130,7 +130,7 @@ const Index = () => {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex-1">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Share Knowledge, Build Community
@@ -185,6 +185,8 @@ const Index = () => {
             </div>
           </div>
         </main>
+
+        <Footer />
       </div>;
   }
 
@@ -278,6 +280,8 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Footer />
     </div>;
 };
 
