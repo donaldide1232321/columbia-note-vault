@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,6 +33,11 @@ const Upload = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (50MB limit)
+      if (file.size > 50 * 1024 * 1024) {
+        toast({ title: "File too large", description: "Please select a file smaller than 50MB", variant: "destructive" });
+        return;
+      }
       setFormData({ ...formData, file });
     }
   };
@@ -45,34 +49,49 @@ const Upload = () => {
       return;
     }
 
+    if (!user) {
+      toast({ title: "Authentication required", variant: "destructive" });
+      return;
+    }
+
     setIsUploading(true);
     
     try {
       // Generate unique file path
       const fileExt = formData.file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${user?.id}/${fileName}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('Starting file upload:', { fileName, filePath, fileSize: formData.file.size });
 
       // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('study-materials')
-        .upload(filePath, formData.file);
+        .upload(filePath, formData.file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
-        throw uploadError;
+        console.error('Upload error:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
+
+      console.log('File uploaded successfully:', uploadData);
 
       // Get public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('study-materials')
         .getPublicUrl(filePath);
 
+      console.log('Generated public URL:', publicUrl);
+
       // Store upload metadata in database
       const { error: dbError } = await supabase
         .from('uploads')
         .insert({
-          user_id: user?.id,
-          username: user?.username,
+          user_id: user.id,
+          username: user.username,
           course: formData.course,
           professor: formData.professor,
           file_type: formData.fileType,
@@ -82,7 +101,8 @@ const Upload = () => {
         });
 
       if (dbError) {
-        throw dbError;
+        console.error('Database error:', dbError);
+        throw new Error(`Database error: ${dbError.message}`);
       }
 
       await updateUserUploadStatus();
@@ -92,7 +112,11 @@ const Upload = () => {
     } catch (error) {
       console.error('Upload error:', error);
       setIsUploading(false);
-      toast({ title: "Upload failed", description: "Please try again", variant: "destructive" });
+      toast({ 
+        title: "Upload failed", 
+        description: error instanceof Error ? error.message : "Please try again", 
+        variant: "destructive" 
+      });
     }
   };
 

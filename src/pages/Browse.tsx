@@ -180,36 +180,50 @@ const Browse = () => {
 
   const handleDownload = async (upload: Upload) => {
     try {
-      if (upload.file_url) {
-        // Try to download from Supabase Storage
-        const response = await fetch(upload.file_url);
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          const element = document.createElement('a');
-          element.href = url;
-          element.download = upload.file_name;
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
-          URL.revokeObjectURL(url);
-          
-          toast({ title: "Download started", description: `Downloading ${upload.file_name}` });
-          return;
-        }
-      }
+      console.log('Starting download for:', upload.file_name, 'URL:', upload.file_url);
       
-      // If file_url doesn't work, show error
+      if (!upload.file_url) {
+        toast({ 
+          title: "Download failed", 
+          description: "File URL not available", 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // For Supabase Storage URLs, we can directly fetch them
+      const response = await fetch(upload.file_url);
+      
+      if (!response.ok) {
+        console.error('Download response error:', response.status, response.statusText);
+        throw new Error(`Failed to fetch file: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      console.log('Downloaded blob:', blob.size, 'bytes, type:', blob.type);
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const element = document.createElement('a');
+      element.href = url;
+      element.download = upload.file_name;
+      element.style.display = 'none';
+      
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      URL.revokeObjectURL(url);
+      
       toast({ 
-        title: "Download failed", 
-        description: "File is no longer available", 
-        variant: "destructive" 
+        title: "Download started", 
+        description: `Downloading ${upload.file_name}` 
       });
+
     } catch (error) {
       console.error('Error downloading file:', error);
       toast({ 
         title: "Download failed", 
-        description: "Unable to download file", 
+        description: error instanceof Error ? error.message : "Unable to download file", 
         variant: "destructive" 
       });
     }
