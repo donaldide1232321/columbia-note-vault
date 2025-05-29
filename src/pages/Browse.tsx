@@ -180,8 +180,8 @@ const Browse = () => {
 
   const handleDownload = async (upload: Upload) => {
     try {
-      // If the upload has a file_url, try to download the actual file
       if (upload.file_url) {
+        // Try to download from Supabase Storage
         const response = await fetch(upload.file_url);
         if (response.ok) {
           const blob = await response.blob();
@@ -198,32 +198,21 @@ const Browse = () => {
           return;
         }
       }
+      
+      // If file_url doesn't work, show error
+      toast({ 
+        title: "Download failed", 
+        description: "File is no longer available", 
+        variant: "destructive" 
+      });
     } catch (error) {
       console.error('Error downloading file:', error);
+      toast({ 
+        title: "Download failed", 
+        description: "Unable to download file", 
+        variant: "destructive" 
+      });
     }
-
-    // Fallback: Create a text file with study material info
-    const content = `Study Material: ${upload.label}
-Course: ${upload.course}
-Professor: ${upload.professor}
-Type: ${upload.file_type}
-Uploaded by: ${upload.username}
-Date: ${new Date(upload.upload_date).toLocaleDateString()}
-
-This is a placeholder for the actual file content.
-In a real application, this would contain the actual study material.`;
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const element = document.createElement('a');
-    element.href = url;
-    element.download = `${upload.file_name}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    URL.revokeObjectURL(url);
-    
-    toast({ title: "Download started", description: `Downloading ${upload.file_name}` });
   };
 
   const getFileTypeColor = (fileType: string) => {

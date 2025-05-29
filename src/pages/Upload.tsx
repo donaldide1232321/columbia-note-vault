@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,8 +48,27 @@ const Upload = () => {
     setIsUploading(true);
     
     try {
-      // Store upload in database
-      const { error } = await supabase
+      // Generate unique file path
+      const fileExt = formData.file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('study-materials')
+        .upload(filePath, formData.file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('study-materials')
+        .getPublicUrl(filePath);
+
+      // Store upload metadata in database
+      const { error: dbError } = await supabase
         .from('uploads')
         .insert({
           user_id: user?.id,
@@ -58,11 +78,11 @@ const Upload = () => {
           file_type: formData.fileType,
           label: formData.label,
           file_name: formData.file.name,
-          file_url: `mock://uploads/${Date.now()}-${formData.file.name}` // Mock URL for now
+          file_url: publicUrl
         });
 
-      if (error) {
-        throw error;
+      if (dbError) {
+        throw dbError;
       }
 
       await updateUserUploadStatus();
@@ -184,13 +204,13 @@ const Upload = () => {
                           type="file"
                           className="sr-only"
                           onChange={handleFileChange}
-                          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
                           required
                         />
                       </label>
                       <p className="pl-1">or drag and drop</p>
                     </div>
-                    <p className="text-xs text-gray-500">PDF, DOC, TXT, or image files up to 10MB</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, PPT, XLS, TXT, or image files up to 50MB</p>
                     {formData.file && (
                       <p className="text-sm text-columbia-blue font-medium">Selected: {formData.file.name}</p>
                     )}
