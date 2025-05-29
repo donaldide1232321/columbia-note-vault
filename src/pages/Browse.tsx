@@ -178,8 +178,31 @@ const Browse = () => {
     }
   };
 
-  const handleDownload = (upload: Upload) => {
-    // Create a proper text file download instead of mock content
+  const handleDownload = async (upload: Upload) => {
+    try {
+      // If the upload has a file_url, try to download the actual file
+      if (upload.file_url) {
+        const response = await fetch(upload.file_url);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const element = document.createElement('a');
+          element.href = url;
+          element.download = upload.file_name;
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+          URL.revokeObjectURL(url);
+          
+          toast({ title: "Download started", description: `Downloading ${upload.file_name}` });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+
+    // Fallback: Create a text file with study material info
     const content = `Study Material: ${upload.label}
 Course: ${upload.course}
 Professor: ${upload.professor}
